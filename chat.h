@@ -15,6 +15,10 @@
  #include <string.h>
  
 #define SERVER_PORT 8888
+
+
+
+
 //在线用户 
 struct ONLINE{
   int fd;  //-1   
@@ -23,6 +27,9 @@ struct ONLINE{
   char passwd[32];
 }; 
 #define MAX_USER_NUM 64
+
+
+
 
 //C/S通信的结构体
 struct protocol{

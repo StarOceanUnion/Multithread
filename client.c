@@ -50,5 +50,19 @@ int logout(int fd)
 //主函数
 int main(int argc,char **argv)
 {
+	socket();
+	connect();
+	pthread_create();
+	while(1)
+	{
+		/*
+		此处用来做menu，利用flag来判断是哪个界面，区分登录和功能界面
+		*/
 
+		//用来判断进入什么函数，比如登录注册等
+		switch(click)
+		{
+
+		}
+	}
 }
