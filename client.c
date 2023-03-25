@@ -20,6 +20,7 @@ void *func(void *arg)
 	char buf[RECVBUFSIZE];
 
 	new_fd = (int)arg;
+
 	while(1)
 	{
 		iRecvLen = recv(new_fd,buf,RECVBUFSIZE,0);
@@ -48,7 +49,7 @@ int main(int argc,char **argv)
 	//检测参数个数
 	if(argc != 3)
 	{
-		printf("Usage:%s hostname portnumber\a\n",arg[0]);
+		printf("Usage:%s hostname portnumber\a\n",argv[0]);
 		return -1;
 	}
 
@@ -61,16 +62,18 @@ int main(int argc,char **argv)
 	}
 
 	//connect
-	//tClientSocket.sin_addr.s_addr = INADDR_ANY;
+	tServerSocket.sin_addr.s_addr = inet_addr(argv[1]);
 	tServerSocket.sin_family = AF_INET;
 	tServerSocket.sin_port = htons(SERVER_PORT);
+
 	if (0 == inet_aton(argv[1], &tServerSocket.sin_addr))
  	{
 		printf("invalid server_ip\n");
 		return -1;
 	}
+
 	memset(tServerSocket.sin_zero, 0, 8);
-	iRet = connect(iClientSocketm, (const struct sockaddr*)tServerSocket,sizeof(struct sockaddr));
+	iRet = connect(iClientSocket, (const struct sockaddr*)&tServerSocket,sizeof(struct sockaddr));
 	if (-1 == iRet)
 	{
 		printf("connect error!\n");
@@ -90,12 +93,12 @@ int main(int argc,char **argv)
 	{
 		#if 1
 		printf("input message:");
-		fgets(buf, RECVBUFSIZE, stdin);
+		scanf("%s",buf);
 		iSendLen = send(iClientSocket,buf,strlen(buf),0);
 		if(iSendLen == -1)
 		{
 			printf("write error!\n");
-			return -1
+			return -1;
 		}
 		#endif
 	}

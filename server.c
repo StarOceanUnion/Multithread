@@ -23,6 +23,7 @@ static void *thread_func(void *arg)
   int new_fd;     //传入的参数应为accept后的文件描述符
   char recvbuf[RECVBUFFER_SIZE];
   new_fd =(int)arg;
+  
 
 
 
@@ -105,10 +106,11 @@ int main(int argc,char **argv)
   { 
     iAddrLen = sizeof(struct sockaddr);
     iClientSocket = accept(iServerSocket,(struct sockaddr*)&tClientAddr,&iAddrLen);
+    
     if(iClientSocket != -1)
     {
       iRet = pthread_create(&tid, NULL, thread_func, (void *)iClientSocket);
-      if(iRet = -1)
+      if(iRet == -1)
       {
         printf("thread create error!\n");
         return -1;
