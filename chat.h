@@ -15,16 +15,17 @@
  #include <string.h>
  
 #define SERVER_PORT 8888
+#define BACK_LOG 10
 
 
 
 
 //在线用户 
 struct ONLINE{
-  int fd;  //-1   
-  int flage; //registed or not
-  char name[32];
-  char passwd[32];
+  int fd;                   //-1:offline   ; >0:login and the number represent his socket
+  int flage;                //registed or not: -1  not;  1  registed
+  char name[32];            //the name of registed user
+  char passwd[32];          //the password of registed user
 }; 
 #define MAX_USER_NUM 64
 
@@ -33,10 +34,10 @@ struct ONLINE{
 
 //C/S通信的结构体
 struct protocol{
-  int cmd;
-  int state;
-  char name[32];
-  char data[64];
+  int cmd;                  //command
+  int state;                //to load the information that the command returns
+  char name[32];            //username
+  char data[64];            //users' data
 };
 
 
