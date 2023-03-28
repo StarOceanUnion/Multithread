@@ -20,7 +20,7 @@
 
 
 
-//在线用户 
+//online user 
 struct ONLINE{
   int fd;                   //-1:offline   ; >0:login and the number represent his socket
   int flage;                //registed or not: -1  not;  1  registed
@@ -32,7 +32,7 @@ struct ONLINE{
 
 
 
-//C/S通信的结构体
+//  the struct of C/S's communication
 struct protocol{
   int cmd;                  //command
   int state;                //to load the information that the command returns

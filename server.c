@@ -33,7 +33,23 @@ void del_user_online(int index)
 //add user func
 int add_user(int sockfd,struct protocol*msg)
 {
+  int i;
+  int index = -1;
+  char buf[128] = {0};
 
+  for(i=0;i<64;i++)
+  {
+    if(online[i].flage == -1)
+    {
+      online[i].flage = 1;                //let this user "online"
+      strcpy(online[i].name,msg->name);   //*msg.name
+      strcpy(online[i].data,msg->data);
+      printf("regist %s to %d \n",msg->name,i);
+      index = i;
+      return index;
+    }
+  }
+  return index;
 }
 
 //bordcast-chat func
@@ -45,7 +61,33 @@ void broadcast(int index,struct protocol*msg)
 //finding the destination of online user func
 int find_dest_user_online(int sockfd,int *index,struct protocol*msg)
 {
+  int i;
+  
+  for(i=0;i<MAX_USER_NUM;i++)
+  {
+    //this pos not use
+    if(online[i].flage == -1)
+    {
+      continue;
+    }
 
+    if((strcmp(msg->name,online[i].name) == 0)&&(strcmp(msg->data,online[i].passwd) == 0))
+    {
+      if(online[i].fd == -1)
+      {
+        online[i].fd = sockfd;
+        *index = i;
+        return OP_OK;
+      }
+      else
+      {
+        //user has logged
+        printf("%s had login\n",online[i].name);
+        return USER_LOGED;
+      }
+    }
+  }
+  return NAME_PWD_NMATCH;
 }
 
 //finding the destination of user func
@@ -84,14 +126,75 @@ void list_online_user(int index)
 //register func
 void registe(int sockfd,int *index,struct protocol*msg)
 {
+  int dest_index;
+  char buf[128];
+  struct protocol msg_back;
+  msg_back.cmd = REGISTE;
 
-  find_dest_user();
+  //find that user
+  dest_index = find_dest_user(msg->name);     //*msg.name
+
+  if(dest_index == -1)   //no name of this user registed
+  {
+    *index = add_user(sockfd,msg);
+
+    online[*index].flage = 1;
+    msg_back.state = OP_OK;
+
+    printf("user %s regist success!\n",msg->name);
+    write(sockfd,&msg_back,sizeof(msg_back));
+
+    return;
+  }
+  else
+  {
+    msg_back.state = NAME_EXIST;
+    printf("user %s exist!\n",msg->name);
+
+    wirte(sockfd,&msg_back,sizeof(msg_back));
+    return;
+  }
 }
 
 //login func
 void login(int sockfd,int *index,struct protocol*msg)
 {
-  find_dest_user_online();
+  int i;
+  int ret;
+  char buf[128];
+  struct protocol msg_back;
+
+  msg_back.state = LOGIN;     //order is LOGIN
+
+  //let's find that user
+  ret = find_dest_user_online(sockfd,index,msg);
+
+  if(ret != OP_OK)
+  {
+    msg_back.state = ret;
+    strcpy(buf,"there is no this user\n");
+    printf("user %s login fail!\n",msg->name);
+    write(sockfd,&msg_back,sizeof(msg_back));
+    return;
+  }
+  else
+  {
+    msg_back.state = OP_OK;
+    strcpy(msg_back.data,"login success!\n");
+    printf("user %s login success! index = %d \n",msg->name,*index);
+    write(online[*index].fd,&msg_back,sizeof(msg_back));
+  }
+
+  //tell all clients that the user online
+  sprintf(buf,"%s online\n",online[*index].name);
+
+  for(i=0;i<MAX_USER_NUM;i++)
+  {
+    if(online[i].fd != -1)
+    {
+      write(online[i].fd,buf,strlen(buf));
+    }
+  }
 }
 
 
@@ -122,23 +225,28 @@ void *func(void *arg)
     }
     switch(msg.cmd)   //scan the command that users add
     {
-    case REGISTE:
-      registe(sockfd,&index,&msg);
-      break;
-    case LOGIN:
-      login(sockfd,&index,&msg);
-      break;
-    case BROADCAST:
-      broadcast();
-      break;
-    case PRIVATE:
-      private();
-      break;
-    case ONLINEUSER:
-      list_online_user();
-      break;
-    default:
-      break;
+      /*there is a var called msg_back,
+       its function is to save the first var 
+       that we can use this switch again*/
+
+
+      case REGISTE:
+        registe(sockfd,&index,&msg);
+        break;
+      case LOGIN:
+        login(sockfd,&index,&msg);
+        break;
+      case BROADCAST:
+        broadcast();
+        break;
+      case PRIVATE:
+        private();
+        break;
+      case ONLINEUSER:
+        list_online_user();
+        break;
+      default:
+        break;
     }
   }
 }
