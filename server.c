@@ -51,7 +51,22 @@ int find_dest_user_online(int sockfd,int *index,struct protocol*msg)
 //finding the destination of user func
 int find_dest_user(char *name)
 {
+  int i;
 
+  for(i=0;i<MAX_USER_NUM;i++)
+  {
+    if(online[i].flage == -1)  //not registed
+    {
+      continue;
+    }
+
+    if(strcmp(name,online[i].name) == 0)
+    {
+      return i;
+    }
+  }
+  
+  return -1;
 }
 
 //private-chat func
@@ -70,12 +85,13 @@ void list_online_user(int index)
 void registe(int sockfd,int *index,struct protocol*msg)
 {
 
+  find_dest_user();
 }
 
 //login func
 void login(int sockfd,int *index,struct protocol*msg)
 {
-
+  find_dest_user_online();
 }
 
 
@@ -84,11 +100,46 @@ void *func(void *arg)
 {
   int sockfd = (int)arg;
   char buf[64];
+  int index = -1;
+  int len;               //the number of returned byte
+  struct protocol msg;   //the message of user,like command, status, data, and name
 
+  //when the client connectted,we have to put in a name first
+  //there we don't consider the errors about data's type, name repetiton and overcrowding
 
+  //chatting
   while(1)
   {
-    
+    len = read(sockfd,&msg,sizeof(msg));
+    if(len <= 0)     //0 means that is the end of file,and -1 means that func error 
+    {
+      //logout
+      printf("%s offline\n",online[index].name);
+      //delete user from the online list
+      del_user_online(index);
+      close(sockfd);
+      return;
+    }
+    switch(msg.cmd)   //scan the command that users add
+    {
+    case REGISTE:
+      registe(sockfd,&index,&msg);
+      break;
+    case LOGIN:
+      login(sockfd,&index,&msg);
+      break;
+    case BROADCAST:
+      broadcast();
+      break;
+    case PRIVATE:
+      private();
+      break;
+    case ONLINEUSER:
+      list_online_user();
+      break;
+    default:
+      break;
+    }
   }
 }
 
