@@ -55,6 +55,19 @@ int add_user(int sockfd,struct protocol*msg)
 //bordcast-chat func
 void broadcast(int index,struct protocol*msg)
 {
+  int i;
+  char buf[128] = {0};
+
+  sprintf(buf,"%s says: %s \n",online[i].name,msg->data);
+
+  for(i=0;i<MAX_USER_NUM;i++)
+  {
+    if((online[i].fd == -1)||(i == index))
+    {
+      continue;
+    }
+    write(online[i].fd,buf,strlen(buf));
+  }
 
 }
 
@@ -114,13 +127,46 @@ int find_dest_user(char *name)
 //private-chat func
 void private(int index,struct protocol*msg)
 {
-
+  int dest_index;
+  char buf[128];
+  //find that user
+  dest_index = find_dest_user(msg->name);
+  if(dest_index == -1)
+  {
+    sprintf(buf,"there is no user :%s \n",msg->name);
+    write(online[i].fd,buf,strlen(buf));
+    return;
+  }
+  else
+  {
+    sprintf(buf,"%s says to %s : %s \n",online[index].name,online[dest_index].name,msg->data);
+    write(online[i].fd,buf,strlen(buf));
+    return;
+  }
 }
 
 //the list of online user func
 void list_online_user(int index)
 {
+  int i;
+  struct protocol msg;
 
+  for(i=0;i<MAX_USER_NUM;i++)
+  {
+    if(online[i].fd == -1)
+    {
+      continue;
+    }
+    memset(&msg,0,sizeof(msg));
+    msg.cmd = ONLINEUSER;
+    msg.state = ONLINEUSER_OK;
+    strcpy(msg.name,online[i].name);
+    printf("list online[i] = %s\n",online[i].name);
+    write(online[i].fd,&msg,sizeof(msg));
+  }
+  msg.cmd = ONLINEUSER;
+  msg.state = ONLINEUSER_OVER;
+  write(online[index].fd,&msg,sizeof(msg));
 }
 
 //register func
@@ -237,13 +283,13 @@ void *func(void *arg)
         login(sockfd,&index,&msg);
         break;
       case BROADCAST:
-        broadcast();
+        broadcast(index,&msg);
         break;
       case PRIVATE:
-        private();
+        private(index,&msg);
         break;
       case ONLINEUSER:
-        list_online_user();
+        list_online_user(index);
         break;
       default:
         break;
