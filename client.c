@@ -13,44 +13,144 @@ int login_f = -1;
 //broadcast chat func
 void broadcast(int fd)
 {
+	struct protocol msg;
 
+	msg.cmd = BROADCAST;
+	printf("say:\n#");
+	scanf("%s",msg.data);
+	write(fd,&msg,sizof(msg));
 }
 
 
 //private chat func
 void private(int fd)
 {
+	struct protocol msg;
+
+	printf("input the name that you want to talk:\n#");
+	scanf("%s",msg.name);
+
+	printf("say:\n#");
+	scanf("%s",msg.data);
+	write(fd,&msg,sizof(msg));
 
 }
 
 //online user list func
 void list_online_user(sockfd)
 {
+	struct protocol msg;
 
+	msg.cmd = ONLINEUSER;
+
+	write(sockfd,&msg,sizeof(msg));
+	getchar();
+	getchar();
 }
 
 //register func
 int registe(int fd)
 {
+	struct protocol msg,msg_back;
+
+	msg.cmd = REGISTE;
+	printf("input your name:");
+	scanf("%s",msg.name);
+	printf("input your password:");
+	scanf("%s",msg.data);
+
+	write(sockfd,&msg,sizeof(msg));
+	read(sockfd,&msg_back,sizeof(msg_back));
+	if(msg_back.state != OP_OK)
+	{
+		printf("Name had exist,try other names!\n");
+		getchar();
+		getchar();
+		return -1;
+	}
+	else
+	{
+		printf("Regist success!\n");
+		getchar();
+		getchar();
+		return 0;
+	}
 
 }
 
 //login func
 int login(int fd)
 {
+	struct protocol msg,msg_back;
+	msg.cmd = LOGIN;
+	printf("input your name:");
+	scanf("%s",msg.name);
+	printf("input your password:");
+	scanf("%s",msg.data);
 
+	write(sockfd,&msg,sizeof(msg));
+	read(sockfd,&msg_back,sizeof(msg_back));
+	if(msg_back.state != OP_OK)
+	{
+		printf("name had exist,try other names!\n");
+		getchar();
+		getchar();
+		login_f = -1;
+		return NAME_PWD_NMATCH;
+	}
+	else
+	{
+		printf("Login success!!\n");
+		getchar();
+		getchar();
+		login_f = 1;
+		return OP_OK;
+	}
 }
 
 //log out func
 int logout(int fd)
 {
-
+	close(fd);
+	login_f = -1;
 }
 
 //multithread func
 void *func(void *arg)
 {
+	int len;
+	char buf[128] = {0};
+	struct protocol *msg;
 
+	while(1)
+	{
+		if(login_f != 1)
+		{
+			continue;
+		}
+		memset(buf,0,sizeof(buf));
+		len = read(iClientSocket,buf,sizeof(buf));
+		if(len <= 0)
+		{
+			close(iClientSocket);
+			return;
+		}
+		msg = (struct protocol *)buf;
+		//show online user
+		if((msg->state == ONLINEUSER_OK) && (msg->cmd == ONLINEUSER))
+		{
+			printf("%s\t",msg->name);
+			continue;
+		}
+		if((msg->state == ONLINEUSER_OVER) && (msg->cmd == ONLINEUSER))
+		{
+			printf("\n");
+			continue;
+		}
+		buf[len] = '\0';
+
+		printf("%s\n",buf);
+	}
 }
 
 //main func
