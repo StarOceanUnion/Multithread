@@ -310,6 +310,12 @@ int main(int argc,char **argv)
   struct sockaddr_in tClientAddr;
 
 
+  if(argc != 3)
+  {
+    printf("Usage:%s hostname portnumber\a\n",argv[0]);
+    return -1;
+  }
+  
   //socket
   iServerSocket = socket(AF_INET,SOCK_STREAM,0);
   if(iServerSocket == -1)

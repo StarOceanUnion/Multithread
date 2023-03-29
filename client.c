@@ -1,68 +1,172 @@
 #include "chat.h"
 
+int iClientSocket;
+int addrlen;
+struct sockaddr_in tServerSocket;
 
 
+pthread_t pid;
 
-//多线程函数
-void *func(void *arg)
-{
-
-}
+int login_f = -1;
 
 
-//公聊
+//broadcast chat func
 void broadcast(int fd)
 {
 
 }
 
 
-//私聊
+//private chat func
 void private(int fd)
 {
 
 }
 
-//在线列表
+//online user list func
 void list_online_user(sockfd)
 {
 
 }
 
-//注册
+//register func
 int registe(int fd)
 {
 
 }
 
-//登录
+//login func
 int login(int fd)
 {
 
 }
 
-//登出
+//log out func
 int logout(int fd)
 {
 
 }
 
-//主函数
+//multithread func
+void *func(void *arg)
+{
+
+}
+
+//main func
 int main(int argc,char **argv)
 {
-	socket();
-	connect();
-	pthread_create();
+	int sel;
+	int iRet;
+	int ret;
+	int min_sel,max_sel;
+	struct protocol msg;
+
+
+	if(argc != 3)
+	{
+		printf("Usage:%s hostname portnumber\a\n",argv[0]);
+		return -1;
+	}
+
+	//socket
+	iClientSocket = socket(AF_INET,SOCK_STREAM,0);
+	if(iClientSocket == -1)
+	{
+		printf("socket error!\n");
+		return -1;
+	}
+
+	//connect
+	tServerSocket.sin_addr.s_addr = inet_addr(argv[1]);
+	tServerSocket.sin_family = AF_INET;
+	tServerSocket.sin_port = htons(SERVER_PORT);
+
+	if (0 == inet_aton(argv[1], &tServerSocket.sin_addr))
+ 	{
+		printf("invalid server_ip\n");
+		return -1;
+	}
+	memset(tServerSocket.sin_zero, 0, 8);
+
+	addrlen = sizeof(struct sockaddr);
+	iRet = connect(iClientSocket, (const struct sockaddr*)&tServerSocket,addrlen);
+	if (-1 == iRet)
+	{
+		printf("connect error!\n");
+		return -1;
+	}
+
+	//create thread
+	pthread_create(&pid,NULL,func,NULL);
 	while(1)
 	{
 		/*
-		此处用来做menu，利用flag来判断是哪个界面，区分登录和功能界面
+			there is a menu to choose what we want to be in
 		*/
+		system("clear");          //clear the menu
+    	if(login_f == -1)         //not login menu
+    	{
+    	  printf("\t 1 注册 \n");
+    	  printf("\t 2 登录 \n");
+    	}
+    	else if(login_f == 1)     //login menu
+    	{
+    	  printf("\t 3 公聊\n");
+    	  printf("\t 4 私聊\n");
+    	  printf("\t 5 在线列表\n");            
+    	}  
+    	printf("\t 0 退出\n");
+    	
+    	fflush(stdin);
+    	scanf("%d",&sel);
+    	if(sel == 0)
+    	{
+    	  break;
+    	}
+    	if(login_f == 1)
+    	{
+    	  min_sel = 3;
+    	  max_sel = 5;
+    	}
+    	else if(login_f == -1)
+    	{
+    	  min_sel = 1;
+    	  max_sel = 2;
+    	}
+    	if(sel<min_sel || sel > max_sel)      //judge the command
+    	{
+    	  printf("Valid choice ,try again\n");
+    	  continue;
+    	}
 
-		//用来判断进入什么函数，比如登录注册等
-		switch(click)
+		//"switch" to judge what kinds of func do the programme in
+		switch(sel)
 		{
-
+		  case 1:
+		  	registe(iClientSocket);
+		  	break;
+		  case 2:
+		  	ret = login(iClientSocket);
+		  	break;
+		  case 3:
+		  	broadcast(iClientSocket);
+		  	break;
+		  case 4:
+		  	private(iClientSocket);
+		  	break;
+		  case 5:
+		  	logout(iClientSocket);
+		  	break;
+		  case 0:
+		  	logout(iClientSocket);
+		  	break;
+		  default:
+		  	break;
+		}
+		if(sel == 0)
+		{
+			exit(0);
 		}
 	}
 }
