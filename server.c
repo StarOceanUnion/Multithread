@@ -43,7 +43,7 @@ int add_user(int sockfd,struct protocol*msg)
     {
       online[i].flage = 1;                //let this user "online"
       strcpy(online[i].name,msg->name);   //*msg.name
-      strcpy(online[i].data,msg->data);
+      strcpy(online[i].passwd,msg->data);
       printf("regist %s to %d \n",msg->name,i);
       index = i;
       return index;
@@ -134,13 +134,13 @@ void private(int index,struct protocol*msg)
   if(dest_index == -1)
   {
     sprintf(buf,"there is no user :%s \n",msg->name);
-    write(online[i].fd,buf,strlen(buf));
+    write(online[index].fd,buf,strlen(buf));
     return;
   }
   else
   {
     sprintf(buf,"%s says to %s : %s \n",online[index].name,online[dest_index].name,msg->data);
-    write(online[i].fd,buf,strlen(buf));
+    write(online[dest_index].fd,buf,strlen(buf));
     return;
   }
 }
@@ -197,7 +197,7 @@ void registe(int sockfd,int *index,struct protocol*msg)
     msg_back.state = NAME_EXIST;
     printf("user %s exist!\n",msg->name);
 
-    wirte(sockfd,&msg_back,sizeof(msg_back));
+    write(sockfd,&msg_back,sizeof(msg_back));
     return;
   }
 }
@@ -305,14 +305,15 @@ int main(int argc,char **argv)
   int iRet;
   int i;
   int new_fd;
+  int cliaddrlen;
   pthread_t tid;
   struct sockaddr_in tServerAddr;
   struct sockaddr_in tClientAddr;
 
 
-  if(argc != 3)
+  if(argc < 2)
   {
-    printf("Usage:%s hostname portnumber\a\n",argv[0]);
+    printf("Usage:%s portnumber\n",argv[0]);
     return -1;
   }
   
@@ -325,7 +326,7 @@ int main(int argc,char **argv)
   }
 
   //bind
-  tServerAddr.sin_port = htons(SEVER_PORT);
+  tServerAddr.sin_port = htons(SERVER_PORT);
   tServerAddr.sin_family = AF_INET;
   tServerAddr.sin_addr.s_addr = htonl(INADDR_ANY);
   memset(tServerAddr.sin_zero,0,8);
@@ -351,8 +352,8 @@ int main(int argc,char **argv)
 
   while(1)
   {
-    tClientAddr = sizeof(struct sockaddr);
-    new_fd = accept(iServerSocket,(const struct sockaddr*)&tClientAddr,&tClientAddr);
+    cliaddrlen = sizeof(struct sockaddr);
+    new_fd = accept(iServerSocket,(const struct sockaddr*)&tClientAddr,&cliaddrlen);
     if(new_fd != -1)
     {
       printf("client:ip:%s   port:%d   \n", inet_ntoa(tClientAddr.sin_addr),tClientAddr.sin_port);

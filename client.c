@@ -18,7 +18,7 @@ void broadcast(int fd)
 	msg.cmd = BROADCAST;
 	printf("say:\n#");
 	scanf("%s",msg.data);
-	write(fd,&msg,sizof(msg));
+	write(fd,&msg,sizeof(msg));
 }
 
 
@@ -32,7 +32,7 @@ void private(int fd)
 
 	printf("say:\n#");
 	scanf("%s",msg.data);
-	write(fd,&msg,sizof(msg));
+	write(fd,&msg,sizeof(msg));
 
 }
 
@@ -59,8 +59,8 @@ int registe(int fd)
 	printf("input your password:");
 	scanf("%s",msg.data);
 
-	write(sockfd,&msg,sizeof(msg));
-	read(sockfd,&msg_back,sizeof(msg_back));
+	write(fd,&msg,sizeof(msg));
+	read(fd,&msg_back,sizeof(msg_back));
 	if(msg_back.state != OP_OK)
 	{
 		printf("Name had exist,try other names!\n");
@@ -88,8 +88,8 @@ int login(int fd)
 	printf("input your password:");
 	scanf("%s",msg.data);
 
-	write(sockfd,&msg,sizeof(msg));
-	read(sockfd,&msg_back,sizeof(msg_back));
+	write(fd,&msg,sizeof(msg));
+	read(fd,&msg_back,sizeof(msg_back));
 	if(msg_back.state != OP_OK)
 	{
 		printf("name had exist,try other names!\n");
@@ -256,7 +256,7 @@ int main(int argc,char **argv)
 		  	private(iClientSocket);
 		  	break;
 		  case 5:
-		  	logout(iClientSocket);
+		  	list_online_user(iClientSocket);
 		  	break;
 		  case 0:
 		  	logout(iClientSocket);
